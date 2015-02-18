@@ -72,7 +72,7 @@ class AffiliateWP_WooCommerce_Credit {
  
 		add_action( 'woocommerce_before_checkout_form', array( $this, 'action_add_checkout_notice' ) );
  
-		add_action( 'init', array( $this, 'checkout_actions' ) );
+		add_action( 'woocommerce_cart_loaded_from_session', array( $this, 'checkout_actions' ) );
  
 		add_action( 'woocommerce_checkout_order_processed', array( $this, 'validate_coupon_usage' ), 10, 2 );
  
