@@ -10,7 +10,7 @@ class AffiliateWP_Store_Credit_EDD extends AffiliateWP_Store_Credit_Base {
 	 * @since 2.0.0
 	 * @return void
 	 */
-	public function init() {
+	public function setup() {
 		$this->context = 'edd';
 
 		// Make sure Wallet is installed
@@ -83,7 +83,7 @@ class AffiliateWP_Store_Credit_EDD extends AffiliateWP_Store_Credit_Base {
 		$user_id = affwp_get_affiliate_user_id( $referral->affiliate_id );
 
 		// Withdraw the funds from the users' wallet
-		edd_wallet()->wallet->withdraw( $user_id, $referral->amount, 'admin-withdrawal' );
+		edd_wallet()->wallet->withdraw( $user_id, $referral->amount, 'admin-withdraw' );
 
 		return;
 	}

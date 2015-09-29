@@ -8,7 +8,7 @@ class AffiliateWP_Store_Credit_WooCommerce extends AffiliateWP_Store_Credit_Base
 	 * @access public
 	 * @since 2.0.0
 	 */
-	public function init() {
+	public function setup() {
 		$this->context = 'woocommerce';
 
 		add_action( 'woocommerce_before_checkout_form', array( $this, 'action_add_checkout_notice' ) );
