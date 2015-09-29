@@ -1,373 +1,187 @@
 <?php
-/*
-Plugin Name: AffiliateWP - Store Credit
-Plugin URI: http://affiliatewp.com
-Description: Pay AffiliateWP referrals to a WooCommerce account where they can spend it.
-Author: ramiabraham
-Contributors: ramiabraham, pippinsplugins, sumobi
-Version: 0.1
-Author URI: http://affiliatewp.com
-Text Domain: affwp_wc_credit
-Domain Path: /lang
+/**
+ * Plugin Name:     AffiliateWP - Store Credit
+ * Plugin URI:      http://affiliatewp.com
+ * Description:     Pay AffiliateWP referrals as store credit
+ * Author:          ramiabraham
+ * Contributors:    ramiabraham, pippinsplugins, sumobi
+ * Version:         2.0.0
+ * Author URI:      http://affiliatewp.com
+ * Text Domain:     affiliatewp-store-credit
  */
- 
-add_action( 'plugins_loaded', array ( AffiliateWP_WooCommerce_Credit::get_instance(), 'plugin_setup' ) );
- 
-class AffiliateWP_WooCommerce_Credit {
-	/**
-	 * Plugin instance.
-	 *
-	 * @see get_instance()
-	 * @type object
-	 */
-	protected static $instance = NULL;
- 
- 
-	/**
-	 * URL to this plugin's directory.
-	 *
-	 * @type string
-	 */
-	public $plugin_url = '';
- 
- 
-	/**
-	 * Path to this plugin's directory.
-	 *
-	 * @type string
-	 */
-	public $plugin_path = '';
- 
- 
-	/**
-	 * Access this plugin’s working instance
-	 *
-	 * @wp-hook plugins_loaded
-	 * @since   0.1.0
-	 * @return  object of this class
-	 */
-	public static function get_instance() {
- 
-		NULL === self::$instance and self::$instance = new self;
- 
-		return self::$instance;
- 
-	}
- 
- 
-	/**
-	 * Used for regular plugin work.
-	 *
-	 * @wp-hook plugins_loaded
-	 * @since   0.1.0
-	 * @return  void
-	 */
-	public function plugin_setup() {
- 
-		$this->plugin_url    = plugins_url( '/', __FILE__ );
-		$this->plugin_path   = plugin_dir_path( __FILE__ );
-		$this->load_language( 'affwp_wc_credit' );
- 
-		add_action( 'affwp_set_referral_status', array( $this, 'process_payout' ), 10, 3 );
- 
-		add_action( 'woocommerce_before_checkout_form', array( $this, 'action_add_checkout_notice' ) );
- 
-		add_action( 'woocommerce_cart_loaded_from_session', array( $this, 'checkout_actions' ) );
- 
-		add_action( 'woocommerce_checkout_order_processed', array( $this, 'validate_coupon_usage' ), 10, 2 );
- 
-	}
- 
- 
-	/**
-	 * Constructor. Intentionally left empty and public.
-	 *
-	 * @see plugin_setup()
-	 * @since 0.1.0
-	 */
-	public function __construct() {
-	}
- 
- 
-	/**
-	 * Loads translation file.
-	 *
-	 * Accessible to other classes to load different language files (admin and
-	 * front-end for example).
-	 *
-	 * @wp-hook init
-	 * @param   string $domain
-	 * @since   0.1.0
-	 * @return  void
-	 */
-	public function load_language( $domain ) {
- 
-		load_plugin_textdomain( $domain, false, $this->plugin_path . '/languages' );
- 
-	}
- 
- 
-	// @todo docblock
-	public function process_payout( $referral_id, $new_status, $old_status ) {
- 
-		// wp_die( var_dump( array( $referral_id, $new_status, $old_status ) ) );
- 
-		if ( 'paid' === $new_status ) {
- 
-			$this->add_payment( $referral_id );
- 
-		} else if ( ( 'paid' === $old_status ) && ( 'unpaid' === $new_status ) ) {
- 
-			$this->remove_payment( $referral_id );
-		}
- 
-	}
- 
- 
-	// @todo docblock
-	protected function add_payment( $referral_id ) {
- 
-		// If the referral id isn't valid
-		if ( ! is_numeric( $referral_id ) ) {
-			return;
-		}
- 
-		// Get the referral object
-		$referral = affwp_get_referral( $referral_id );
- 
-		// Get the user id
-		$user_id = affwp_get_affiliate_user_id( $referral->affiliate_id );
- 
-		// Get the user's current woocommerce credit balance
-		$current_balance = get_user_meta( $user_id, 'affwp_wc_credit_balance', true );
- 
-		$new_balance = floatval( $current_balance + $referral->amount );
- 
-		return update_user_meta( $user_id, 'affwp_wc_credit_balance', $new_balance );
- 
-	}
- 
- 
-	// @todo docblock
-	protected function remove_payment( $referral_id ) {
- 
-		// If the referral id isn't valid
-		if ( ! is_numeric( $referral_id ) ) {
-			return;
-		}
- 
-		// Get the referral object
-		$referral = affwp_get_referral( $referral_id );
- 
-		// Get the user id
-		$user_id = affwp_get_affiliate_user_id( $referral->affiliate_id );
- 
-		// Get the user's current woocommerce credit balance
-		$current_balance = get_user_meta( $user_id, 'affwp_wc_credit_balance', true );
- 
-		$new_balance = floatval( $current_balance - $referral->amount );
- 
-		return update_user_meta( $user_id, 'affwp_wc_credit_balance', $new_balance );
- 
-	}
- 
- 
-	// @todo docblock
-	public function action_add_checkout_notice() {
- 
-		$balance = (float) get_user_meta( get_current_user_id(), 'affwp_wc_credit_balance', true );
- 
-		$cart_coupons = WC()->cart->get_applied_coupons();
- 
-		$coupon_applied = $this->check_for_coupon( $cart_coupons );
- 
-		// If the user has a credit balance and haven't already generated and applied a coupon code
-		if ( $balance && ! $coupon_applied ) {
-			wc_print_notice( 'You have an account balance of <strong>'. wc_price( $balance ) . '</strong>. Would you like to use it now? <a href="' . add_query_arg( 'affwp_wc_apply_credit', 'true', WC()->cart->get_checkout_url() ) . '" class="button">Apply</a>', 'notice' );
-		}
- 
-	}
- 
- 
-	// @todo docblock
-	public function checkout_actions() {
- 
-		if ( isset( $_GET['affwp_wc_apply_credit'] ) && $_GET['affwp_wc_apply_credit'] ) {
- 
-			$user_id = get_current_user_id();
- 
-			// Get the credit balance and cart total
-			$credit_balance = (float) get_user_meta( $user_id, 'affwp_wc_credit_balance', true );
-			$cart_total     = (float) $this->calculate_cart_subtotal();
- 
-			// Determine the max possible coupon value
-			$coupon_total = $this->calculate_coupon_amount( $credit_balance, $cart_total );
- 
-			// Bail if the coupon value was 0
-			if ( $coupon_total <= 0 ) {
-				return;
-			}
- 
-			// Attempt to generate a coupon code
-			$coupon_code = $this->generate_coupon( $user_id, $coupon_total );
- 
-			// If a coupon code was successfully generated, apply it
-			if ( $coupon_code ) {
- 
-				WC()->cart->add_discount( $coupon_code );
- 
-			}
- 
-		}
-	}
- 
- 
-	// @todo docblock
-	protected function calculate_cart_subtotal() {
- 
-		$cart_subtotal = ( 'excl' == WC()->cart->tax_display_cart ) ? WC()->cart->subtotal_ex_tax : WC()->cart->subtotal;
- 
-		return $cart_subtotal;
- 
-	}
- 
- 
-	// @todo docblock
-	protected function calculate_coupon_amount( $credit_balance, $cart_total ) {
- 
-		// If either of these are empty, return 0
-		if ( ! $credit_balance || ! $cart_total ) {
-			return 0;
-		}
- 
-		if ( $credit_balance > $cart_total ) {
- 
-			$coupon_amount = $cart_total;
- 
-		} else {
- 
-			$coupon_amount = $credit_balance;
- 
-		}
- 
-		return $coupon_amount;
- 
-	}
- 
- 
-	// @todo docblock
-	protected function generate_coupon( $user_id = 0, $amount = 0 ){
- 
-		$amount = floatval( $amount );
-		if ( $amount <= 0 ) {
-			return false;
-		}
- 
-		$user_id = ( $user_id ) ? $user_id : get_current_user_id();
- 
-		$date = current_time( 'Ymd' );
- 
-		$coupon_code = 'AFFILIATE-CREDIT-' . $date . '-' . $user_id;
- 
-		$expires = date( 'Y-m-d', strtotime( '+2 days', current_time( 'timestamp' ) ) );
- 
-		$coupon = array(
-			'post_title' => $coupon_code,
-			'post_content' => '',
-			'post_status' => 'publish',
-			'post_author' => 1,
-			'post_type'		=> 'shop_coupon'
-		);
- 
-		$new_coupon_id = wp_insert_post( $coupon );
- 
-		if ( $new_coupon_id ) {
- 
-			update_post_meta( $new_coupon_id, 'discount_type', 'fixed_cart' );
-			update_post_meta( $new_coupon_id, 'coupon_amount', $amount );
-			update_post_meta( $new_coupon_id, 'individual_use', 'yes' );
-			update_post_meta( $new_coupon_id, 'usage_limit', '1' );
-			update_post_meta( $new_coupon_id, 'expiry_date', $expires );
-			update_post_meta( $new_coupon_id, 'apply_before_tax', 'yes' );
-			update_post_meta( $new_coupon_id, 'free_shipping', 'no' );
- 
-			return $coupon_code;
- 
-		}
- 
-		return false;
- 
-	}
- 
- 
-	// @todo docblock
-	public function validate_coupon_usage( $order_id, $data ) {
- 
-		// Get the order object
-		$order = new WC_Order( $order_id );
- 
-		// Get the user ID associated with the order
-		$user_id = $order->get_user_id();
- 
-		// Grab an array of coupons used
-		$coupons = $order->get_used_coupons();
- 
-		// If the order has coupons
-		if ( $coupon_code = $this->check_for_coupon( $coupons ) ) {
- 
-			// Process the coupon usage and remove the amount from the user's credit balance
-			$this->process_used_coupon( $user_id, $coupon_code );
- 
-		}
- 
-	}
- 
- 
-	// @todo docblock
-	protected function check_for_coupon( $coupons = array() ) {
- 
-		if ( ! empty( $coupons ) ) {
- 
-			foreach ( $coupons as $coupon_code ) {
- 
-				// Return coupon code if an affiliate credit coupon is found
-				if ( false !== stripos( $coupon_code, 'AFFILIATE-CREDIT-' ) ) {
- 
-					return $coupon_code;
- 
-				}
- 
-			}
- 
-		}
- 
-		return false;
- 
-	}
- 
- 
-	// @todo docblock
-	protected function process_used_coupon( $user_id = 0, $coupon_code = '' ) {
- 
-		if ( ! $user_id || ! $coupon_code ) {
-			return;
-		}
- 
-		$coupon = new WC_Coupon( $coupon_code );
- 
-		$coupon_amount = $coupon->amount;
- 
-		if ( ! $coupon_amount ) {
-			return;
-		}
- 
-		// Get the user's current woocommerce credit balance
-		$current_balance = get_user_meta( $user_id, 'affwp_wc_credit_balance', true );
- 
-		$new_balance = floatval( $current_balance - $coupon_amount );
- 
-		return update_user_meta( $user_id, 'affwp_wc_credit_balance', $new_balance );
- 
-	}
- 
+
+// Exit if accessed directly
+if( ! defined( 'ABSPATH' ) ) {
+	exit;
 }
+
+
+final class AffiliateWP_Store_Credit {
+
+
+	/**
+	 * @var AffiliateWP_Store_Credit The one true AffiliateWP_Store_Credit
+	 * @since 0.1
+	 */
+	private static $instance;
+
+	private static $plugin_dir;
+	private static $version;
+
+
+	/**
+	 * Main AffiliateWP_Store_Credit instance
+	 *
+	 * @since 2.0.0
+	 * @static
+	 * @staticvar array $instance
+	 * @return The one true AffiliateWP_Store_Credit
+	 */
+	public static function instance() {
+		if( ! isset( self::$instance ) && ! ( self::$instance instanceof AffiliateWP_Store_Credit ) ) {
+			self::$instance = new AffiliateWP_Store_Credit;
+
+			self::$plugin_dir = plugin_dir_path( __FILE__ );
+			self::$version = '2.0.0';
+
+			self::$instance->load_textdomain();
+			self::$instance->includes();
+			self::$instance->init();
+		}
+
+		return self::$instance;
+	}
+
+
+	/**
+	 * Throw error on object clone
+	 *
+	 * @since 2.0.0
+	 * @access protected
+	 * @return void
+	 */
+	public function __clone() {
+		// Cloning instance of the class is forbidden
+		_doing_it_wrong( __FUNCTION__, __( 'Cheatin&#8217; huh?', 'affiliatewp-store-credit' ), '2.0.0' );
+	}
+
+
+	/**
+	 * Disable unserializing of the class
+	 *
+	 * @since 2.0.0
+	 * @access protected
+	 * @return void
+	 */
+	public function __wakeup() {
+		// Unserializing instances of the class is forbidden
+		_doing_it_wrong( __FUNCTION__, __( 'Cheatin&#8217; huh?', 'affiliatewp-store-credit' ), '2.0.0' );
+	}
+
+
+	/**
+	 * Loads the plugin language files
+	 *
+	 * @since 0.1
+	 * @access public
+	 * @return void
+	 */
+	public function load_textdomain() {
+		// Set filter for plugin language directory
+		$lang_dir = dirname( plugin_basename( __FILE__ ) ) . '/languages/';
+		$lang_dir = apply_filters( 'affiliatewp_store_credit_languages_directory', $lang_dir );
+
+		// Traditional WordPress plugin locale filter
+		$locale = apply_filters( 'plugin_locale', get_locale(), 'affiliatewp-store-credit' );
+		$mofile = sprintf( '%1$s-%2$s.mo', 'affiliatewp-store-credit', $locale );
+
+		// Setup paths to current locale file
+		$mofile_local = $lang_dir . $mofile;
+		$mofile_global = WP_LANG_DIR . '/affiliatewp-store-credit/' . $mofile;
+
+		if( file_exists( $mofile_global ) ) {
+			// Look in global /wp-content/languages/affiliatewp-store-credit/ folder
+			load_textdomain( 'affiliatewp-store-credit', $mofile_global );
+		} elseif( file_exists( $mofile_local ) ) {
+			// Look in local /wp-content/plugins/affiliatewp-store-credit/ folder
+			load_textdomain( 'affiliatewp-store-credit', $mofile_local );
+		} else {
+			// Load the default language files
+			load_plugin_textdomain( 'affiliatewp-store-credit', false, $lang_dir );
+		}
+	}
+
+
+	/**
+	 * Include required files
+	 *
+	 * @since 2.0.0
+	 * @access private
+	 * @return void
+	 */
+	private function includes() {
+		if( is_admin() ) {
+			require_once self::$plugin_dir . 'admin/settings.php';
+		}
+
+		// Check that store credit is enabled
+		if( ! affiliate_wp()->settings->get( 'store-credit' ) ) {
+			return;
+		}
+
+		require_once self::$plugin_dir . 'integrations/class-base.php';
+
+		// Load the class for each integration enabled
+		foreach( affiliate_wp()->integrations->get_enabled_integrations() as $filename => $integration ) {
+			if( file_exists( self::$plugin_dir . 'integrations/class-' . $filename . '.php' ) ) {
+				require_once self::$plugin_dir . 'integrations/class-' . $filename . '.php';
+			}
+		}
+	}
+
+
+	/**
+	 * Run hooks
+	 *
+	 * @since 2.0.0
+	 * @access private
+	 * @return void
+	 */
+	private function init() {
+		if( is_admin() ) {
+			self::$instance->updater();
+		}
+	}
+
+
+	/**
+	 * Load the updater
+	 *
+	 * @since 2.0.0
+	 * @access private
+	 * @return void
+	 * @todo Update addon ID
+	 */
+	public function updater() {
+		if( class_exists( 'AffWP_AddOn_Updater' ) ) {
+			$updater = new AffWP_AddOn_Updater( 0000, __FILE__, self::$version );;
+		}
+	}
+}
+
+
+/**
+ * The main function responsible for returning the one true AffiliateWP_Store_Credit
+ * instance to functions everywhere
+ *
+ * @since 2.0.0
+ * @return object The one true AffiliateWP_Store_Credit instance
+ */
+function affiliatewp_store_credit() {
+	if( ! function_exists( 'affiliate_wp' ) ) {
+		return;
+	}
+
+	return AffiliateWP_Store_Credit::instance();
+}
+add_action( 'plugins_loaded', 'affiliatewp_store_credit', 100 );
