@@ -46,7 +46,6 @@ final class AffiliateWP_Store_Credit {
 
 			self::$instance->load_textdomain();
 			self::$instance->includes();
-			self::$instance->init();
 		}
 
 		return self::$instance;
@@ -136,35 +135,6 @@ final class AffiliateWP_Store_Credit {
 			if( file_exists( self::$plugin_dir . 'integrations/class-' . $filename . '.php' ) ) {
 				require_once self::$plugin_dir . 'integrations/class-' . $filename . '.php';
 			}
-		}
-	}
-
-
-	/**
-	 * Run hooks
-	 *
-	 * @since 2.0.0
-	 * @access private
-	 * @return void
-	 */
-	private function init() {
-		if( is_admin() ) {
-			self::$instance->updater();
-		}
-	}
-
-
-	/**
-	 * Load the updater
-	 *
-	 * @since 2.0.0
-	 * @access private
-	 * @return void
-	 * @todo Update addon ID
-	 */
-	public function updater() {
-		if( class_exists( 'AffWP_AddOn_Updater' ) ) {
-			$updater = new AffWP_AddOn_Updater( 0000, __FILE__, self::$version );;
 		}
 	}
 }
