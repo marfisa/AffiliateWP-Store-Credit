@@ -125,6 +125,7 @@ class AffiliateWP_Store_Credit_WooCommerce extends AffiliateWP_Store_Credit_Base
 			// If a coupon code was successfully generated, apply it
 			if( $coupon_code ) {
 				WC()->cart->add_discount( $coupon_code );
+				wp_redirect( remove_query_arg( 'affwp_wc_apply_credit' ) ); exit;
 			}
 		}
 	}
