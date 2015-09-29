@@ -12,7 +12,7 @@ Requires at least: 3.5
 
 == Description ==
 
-`This is an add-on plugin for [AffiliateWP](http://affiliatewp.com) and does NOT function without it.`
+> This plugin requires [AffiliateWP](http://affiliatewp.com/ "AffiliateWP") v1.7+ in order to function.
 
 This plugin allows you to pay your affiliates in store credit. At this time it supports the WooCommerce and Easy Digital Downloads integrations in AffiliateWP.
 
