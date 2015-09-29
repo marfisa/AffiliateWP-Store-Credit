@@ -10,7 +10,7 @@ class AffiliateWP_Store_Credit_EDD extends AffiliateWP_Store_Credit_Base {
 	 * @since 2.0.0
 	 * @return void
 	 */
-	public function setup() {
+	public function init() {
 		$this->context = 'edd';
 
 		// Make sure Wallet is installed

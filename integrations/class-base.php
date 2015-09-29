@@ -5,17 +5,11 @@ abstract class AffiliateWP_Store_Credit_Base {
 
 	public function __construct() {
 		$this->init();
-		$this->setup();
-	}
 
-	public function init() {
 		add_action( 'affwp_set_referral_status', array( $this, 'process_payout' ), 10, 3 );
 	}
 
-
-	public function setup() {
-
-	}
+	public function init() {}
 
 
 	/**
