@@ -3,8 +3,8 @@
  * Plugin Name:     AffiliateWP - Store Credit
  * Plugin URI:      http://affiliatewp.com
  * Description:     Pay AffiliateWP referrals as store credit
- * Author:          ramiabraham
- * Contributors:    ramiabraham, pippinsplugins, sumobi
+ * Author:          AffiliateWP Team
+ * Contributors:    ramiabraham, pippinsplugins, sumobi, section214
  * Version:         2.0.0
  * Author URI:      http://affiliatewp.com
  * Text Domain:     affiliatewp-store-credit
