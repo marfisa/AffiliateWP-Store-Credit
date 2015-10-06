@@ -1,0 +1,84 @@
+msgid ""
+msgstr ""
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"Project-Id-Version: AffiliateWP - Store Credit\n"
+"POT-Creation-Date: 2015-10-06 15:57+0200\n"
+"PO-Revision-Date: 2015-10-06 16:42+0200\n"
+"Language-Team: fxbenard | FxB <fx@fxbenard.com>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 1.8.5\n"
+"X-Poedit-Basepath: ..\n"
+"X-Poedit-WPHeader: affiliatewp-store-credit.php\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+"X-Poedit-KeywordsList: __;_e;_n:1,2;_x:1,2c;_ex:1,2c;_nx:4c,1,2;esc_attr__;"
+"esc_attr_e;esc_attr_x:1,2c;esc_html__;esc_html_e;esc_html_x:1,2c;_n_noop:1,2;"
+"_nx_noop:3c,1,2;__ngettext_noop:1,2\n"
+"Last-Translator: fxbenard | FxB <fx@fxbenard.com>\n"
+"Language: fr_FR\n"
+"X-Poedit-SearchPath-0: .\n"
+"X-Poedit-SearchPathExcluded-0: *.js\n"
+
+#: admin/settings.php:27
+msgid "Enable Store Credit"
+msgstr "Activer le crédit en boutique"
+
+#: admin/settings.php:28
+msgid "Check this box to enable store credit for referrals"
+msgstr ""
+"Cochez cette case pour activer les crédits en boutique pour les parrainages"
+
+#: affiliatewp-store-credit.php:64 affiliatewp-store-credit.php:77
+msgid "Cheatin&#8217; huh?"
+msgstr "Alors on essaye de tricher&nbsp;?"
+
+#: integrations/class-edd.php:35
+msgid ""
+"AffiliateWP - Store Credit EDD integration requires the EDD Wallet extension!"
+msgstr ""
+"L&rsquo;intégration de AffiliateWP - Store Credit EDD nécessite l&rsquo;"
+"extension EDD Wallet&nbsp;!"
+
+#: integrations/class-edd.php:112
+msgid "Referral Payout"
+msgstr "Paiement du parrainage"
+
+#: integrations/class-edd.php:115
+msgid "Referral Cancelled"
+msgstr "Parrainage annulé"
+
+#: integrations/class-edd.php:137
+msgid "View Details for Referral"
+msgstr "Afficher les détails du parrainage"
+
+#: integrations/class-edd.php:137
+msgid "View Details"
+msgstr "Afficher les détails"
+
+#: integrations/class-woocommerce.php:94
+#, php-format
+msgid ""
+"You have an account balance of <strong>%1$s</strong>. Would you like to use "
+"it now? <a href=\"%2$s\" class=\"button\">Apply</a>"
+msgstr ""
+"Vous avez un solde de compte de <strong>%1$s</strong>. Vous souhaitez "
+"l'utiliser maintenant&nbsp;? <a href=\"%2$s\" class=\"button\">Appliquer</a>"
+
+#. Plugin Name of the plugin/theme
+msgid "AffiliateWP - Store Credit"
+msgstr "AffiliateWP - Store Credit"
+
+#. Plugin URI of the plugin/theme
+#. Author URI of the plugin/theme
+msgid "http://affiliatewp.com"
+msgstr "http://affiliatewp.com"
+
+#. Description of the plugin/theme
+msgid "Pay AffiliateWP referrals as store credit"
+msgstr ""
+"Payer les parrainages d&rsquo;AffiliateWP avec des crédits dans la boutique"
+
+#. Author of the plugin/theme
+msgid "AffiliateWP Team"
+msgstr "AffiliateWP Team"
